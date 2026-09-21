@@ -877,6 +877,60 @@
       #expect(result == model.endPosition)
     }
 
+    @Test
+    func stalePositionsAfterLayoutBecomesEmpty() throws {
+      // given：UIKit 跨 runloop 持有早前 vend 出的 position/range（issue #87）
+      let model = try TextSelectionModel(fixtureName: "two-paragraphs-bidi")
+      let staleStart = model.startPosition
+      let staleEnd = model.endPosition
+      let staleRange = TextRange(start: staleStart, end: staleEnd)
+
+      // when：内容更新后 SwiftUI 换进一个空 collection
+      model.setLayoutCollection(EmptyTextLayoutCollection())
+
+      // then：带旧 position 的查询返回中性值而不是下标越界 trap
+      #expect(model.offset(from: staleStart, to: staleEnd) == 0)
+      #expect(model.position(from: staleStart, offset: 1) == nil)
+      #expect(model.caretRect(for: staleStart) == .zero)
+      #expect(model.firstRect(for: staleRange) == .null)
+      #expect(model.selectionRects(for: staleRange).isEmpty)
+      #expect(model.attributedText(in: staleRange).string.isEmpty)
+      #expect(model.isPositionAtBlockBoundary(staleStart) == false)
+      #expect(model.positionAbove(staleEnd, anchor: staleStart) == nil)
+      #expect(model.positionBelow(staleStart, anchor: staleEnd) == nil)
+    }
+
+    @Test
+    func stalePositionsBeyondCollectionBounds() throws {
+      // given：内容缩短后 collection 变小，旧 position 可能越界在任意一级
+      let model = try TextSelectionModel(fixtureName: "two-paragraphs-bidi")
+      let stalePositions = [
+        TextPosition(
+          indexPath: .init(runSlice: 0, run: 0, line: 0, layout: 2), affinity: .downstream),
+        TextPosition(
+          indexPath: .init(runSlice: 0, run: 0, line: 99, layout: 0), affinity: .downstream),
+        TextPosition(
+          indexPath: .init(runSlice: 0, run: 99, line: 0, layout: 0), affinity: .downstream),
+        TextPosition(
+          indexPath: .init(runSlice: 99, run: 0, line: 0, layout: 0), affinity: .upstream),
+      ]
+
+      for stale in stalePositions {
+        let range = TextRange(start: model.startPosition, end: stale)
+        #expect(model.caretRect(for: stale) == .zero)
+        #expect(model.firstRect(for: range) == .null)
+        #expect(model.selectionRects(for: range).isEmpty)
+        #expect(model.attributedText(in: range).string.isEmpty)
+        _ = model.offset(from: stale, to: model.endPosition)
+      }
+
+      // 双端都越界的 range（from:to: 构造器自行排序，模拟 UIKit 持有区间的真实形态）
+      let staleRange = TextRange(from: stalePositions[0], to: stalePositions[1])
+      #expect(model.firstRect(for: staleRange) == .null)
+      #expect(model.selectionRects(for: staleRange).isEmpty)
+      #expect(model.attributedText(in: staleRange).string.isEmpty)
+    }
+
     #if os(iOS)
       @Test(.disabled())
       @MainActor
