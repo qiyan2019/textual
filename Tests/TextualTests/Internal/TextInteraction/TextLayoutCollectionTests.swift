@@ -28,6 +28,19 @@
       assertSnapshot(of: view, as: .textLayoutCollection())
     }
 
+    // 以换行开头的文本第一行没有 run：快照里必须仍有这一个 layout，否则整段不可选。
+    @Test func leadingNewlinesInlineTextLayout() {
+      struct VerbatimParser: MarkupParser {
+        func attributedString(for input: String) throws -> AttributedString {
+          AttributedString(input)
+        }
+      }
+      let view = InlineText("\n\nlead abc def", parser: VerbatimParser())
+        .padding(.horizontal)
+
+      assertSnapshot(of: view, as: .textLayoutCollection())
+    }
+
     @Test func twoParagraphsBidiStructuredTextLayout() {
       let view = StructuredText(
         markdown: """

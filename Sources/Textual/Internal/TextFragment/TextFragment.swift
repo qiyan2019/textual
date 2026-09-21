@@ -60,7 +60,9 @@ struct TextFragmentAttribute: TextAttribute {
 
 extension Text.Layout {
   var isTextFragment: Bool {
-    first?.first?[TextFragmentAttribute.self] != nil
+    // 标记挂在整段 Text 上，每个 run 都带；但以换行开头的文本第一行是空行、没有 run，
+    // 只看第一行会把整段判成非 fragment 而被选择模型滤掉（长按无反应），所以取第一个 run。
+    lazy.flatMap { $0 }.first?[TextFragmentAttribute.self] != nil
   }
 }
 
