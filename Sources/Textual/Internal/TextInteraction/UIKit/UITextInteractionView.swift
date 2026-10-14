@@ -113,9 +113,19 @@
       // 导致单击在系统双击选词之后再次触发，把刚建立的选区清空。
       addInteraction(selectionInteraction)
 
-      for gesture in selectionInteraction.gesturesForFailureRequirements {
+      for gesture in selectionInteraction.gesturesForFailureRequirements
+      where Self.tapShouldRequireFailure(of: gesture) {
         tapGesture.require(toFail: gesture)
       }
+    }
+
+    // 单击只等多击这类离散识别器判定。若也依赖拖选（pan / long press）识别器失败，
+    // 单击在等双击间隔（Mac 上默认可达 1 秒以上）时会把它们一直压在 failed，
+    // 这段时间里的按下拖选收不到触点、选不中文字。
+    static func tapShouldRequireFailure(of gesture: UIGestureRecognizer) -> Bool {
+      !(gesture is UIPanGestureRecognizer)
+        && !(gesture is UILongPressGestureRecognizer)
+        && !(gesture is UIHoverGestureRecognizer)
     }
 
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
