@@ -17,6 +17,15 @@
       true
     }
 
+    #if targetEnvironment(macCatalyst)
+      // Mac Catalyst maps a focusable UIKit first responder to the AppKit keyboard focus ring, so
+      // clicking selectable text drew a blue rectangle around the whole text block. Selection and
+      // copy don't need keyboard focus appearance; opting out keeps clicks and selection intact.
+      override var canBecomeFocused: Bool {
+        false
+      }
+    #endif
+
     var model: TextSelectionModel
     var exclusionRects: [CGRect]
     var openURL: OpenURLAction
