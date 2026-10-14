@@ -24,11 +24,9 @@ struct TextSelectionInteraction: ViewModifier {
       if textSelection.allowsSelection {
         content
           .overlayTextLayoutCollection { layoutCollection in
-            Color.clear
-              .onChange(of: AnyTextLayoutCollection(layoutCollection), initial: true) {
-                model.setCoordinator(coordinator)
-                model.setLayoutCollection(layoutCollection)
-              }
+            TextLayoutModelUpdater(
+              model: model, layoutCollection: layoutCollection, coordinator: coordinator
+            )
           }
           .modifier(PlatformTextSelectionInteraction(model: model))
       } else {

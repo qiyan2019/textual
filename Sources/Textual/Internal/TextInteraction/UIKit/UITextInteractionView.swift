@@ -109,11 +109,13 @@
       selectionInteraction.textInput = self
       selectionInteraction.delegate = self
 
+      // 先安装交互，UIKit 此时才创建选择识别器；提前读取会得到空列表，
+      // 导致单击在系统双击选词之后再次触发，把刚建立的选区清空。
+      addInteraction(selectionInteraction)
+
       for gesture in selectionInteraction.gesturesForFailureRequirements {
         tapGesture.require(toFail: gesture)
       }
-
-      addInteraction(selectionInteraction)
     }
 
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
