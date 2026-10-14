@@ -120,7 +120,7 @@
     }
 
     // 单击只等多击这类离散识别器判定。若也依赖拖选（pan / long press）识别器失败，
-    // 单击在等双击间隔（Mac 上默认可达 1 秒以上）时会把它们一直压在 failed，
+    // 单击在等系统双击间隔（Mac 上随用户设置，实测 1.4 秒）时会把它们一直压在 failed，
     // 这段时间里的按下拖选收不到触点、选不中文字。
     static func tapShouldRequireFailure(of gesture: UIGestureRecognizer) -> Bool {
       !(gesture is UIPanGestureRecognizer)
